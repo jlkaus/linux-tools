@@ -2,7 +2,45 @@
 
 use strict;
 use warnings;
+use Time::HiRes;
 
+# Gather information from the host and report in JSON, YAML, KV pairs, or one-line format.
+# Includes information about:
+#   CPU Arch, Vendor, Model, Core-count, speed
+#   Motherboard Vendor, Model, version (especially for Raspberry Pis)
+#   Boot Disk model/serial/size and ptuuid for id
+#   Hostname, IP addresses
+#   MAC addresses
+#   Kernel version
+#   OS platform/distro/version
+#   current TOD and uptime
+#   memory size (reported by kernel and hardware info, if available)
+
+# dmidecode for intel systems can be used to get memory hw info and board info
+# /proc/cpuinfo can be used to get cpu info and board info for rpi systems
+# /proc/meminfo can be used to get hw reported mem info
+# lsblk can be used to get boot disk info
+# ip addr show can get IP address and MAC addresses
+# hostname to get hostname
+# clock_gettime(CLOCK_MONOTONIC) and clock_gettime(CLOCK_REALTIME) to get TOD and uptime info
+
+# hostname -f
+# hostname -s
+# clock_gettime(CLOCK_MONOTONIC)
+# clock_gettime(CLOCK_REALTIME)
+# uname -m
+# uname -r
+# uname -s
+# /etc/os-release
+# /proc/meminfo |grep MemTotal
+# /proc/cpuinfo
+# -e /boot/efi && df /boot/efi --output=source 2> /dev/null |tail -n +2
+# -e /boot && df /boot --output=source 2> /dev/null |tail -n +2
+# -e / && df / --output=source 2> /dev/null |tail -n +2
+# lsblk $SOURCE -o NAME,SIZE,TYPE,SERIAL,MODEL,PTUUID -p -l -n -b | awk '$3=="disk" {print}'
+# ip addr show scope global primary
+# dmidecode -t 2
+# dmidecode -t 17
 
 
 
