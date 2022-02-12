@@ -1,0 +1,42 @@
+#!/bin/bash
+
+BMGIT_HEADER=${BMGIT_HEADER:-%(color:yellow)%(repo)%(color:reset)\\n}
+BMGIT_FOOTER=${BMGIT_FOOTER:-\\n}
+
+niceprint() {
+    echo -n -e "$1" |
+        sed -E -e "s/%\(repo\)/${2}/g;" \
+            -e "s/%\(color:reset\)/$(tput sgr0)/g;" \
+            -e "s/%\(color:red\)/$(tput setaf 1)/g;" \
+            -e "s/%\(color:green\)/$(tput setaf 2)/g;" \
+            -e "s/%\(color:yellow\)/$(tput setaf 3)/g;" \
+            -e "s/%\(color:blue\)/$(tput setaf 4)/g;" \
+            -e "s/%\(color:magenta\)/$(tput setaf 5)/g;" \
+            -e "s/%\(color:cyan\)/$(tput setaf 6)/g;" \
+            -e "s/%\(color:white\)/$(tput setaf 7)/g;"
+
+}
+
+# Find the root git directory to operate in
+if [ -z "$BMGIT_ROOT" ]; then
+    BMGIT_ROOT=$(git rev-parse --show-toplevel 2> /dev/null)
+    if [ -z "$BMGIT_ROOT" ]; then
+        BMGIT_ROOT="."
+    else
+        BMGIT_ROOT=${BMGIT_ROOT}/..
+    fi
+fi
+
+# Find all directories directly under the BMGIT_ROOT that contain
+# a .git directory and thus are git repositories.
+for x in $(find ${BMGIT_ROOT} -maxdepth 2 -type d -name .git -printf "%P\n"); do
+    x=${x%%/.git}
+    niceprint "${BMGIT_HEADER}" $x
+
+    # For each of those directories, execute the given git commands, with
+    # the rest of the arguments.
+    git -C ${BMGIT_ROOT}/$x "$@"
+
+    niceprint "${BMGIT_FOOTER}" $x
+done
+
