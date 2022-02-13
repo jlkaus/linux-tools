@@ -1,0 +1,2 @@
+#!/bin/bash
+findpkg --by-version --new-only -r slackware64 kernel-{huge,generic,modules} -t | xargs fetchpkg --exec installkernelpkg

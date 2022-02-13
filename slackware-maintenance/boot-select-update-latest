@@ -1,0 +1,13 @@
+#!/bin/bash
+HEADER_VER=`findpkg --by-version --installed kernel-headers- -o '%v'`
+HUGE_PKG=`findpkg --by-version --installed kernel-huge- -t | grep -e "-${HEADER_VER}-"`
+GENERIC_PKG=`findpkg --by-version --installed kernel-generic- -t | grep -e "-${HEADER_VER}-"`
+
+if [ -n "$HUGE_PKG" ]; then
+	boot-select -s latest-huge=$HUGE_PKG
+fi
+
+if [ -n "$GENERIC_PKG" ]; then
+	boot-select -s latest-generic=$GENERIC_PKG
+fi
+

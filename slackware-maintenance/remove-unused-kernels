@@ -1,0 +1,3 @@
+#!/bin/bash
+
+boot-select -u |xargs -r removepkg

@@ -1,0 +1,13 @@
+#!/bin/bash
+RUNNING_VER=`uname -r`
+HUGE_PKG=`findpkg --by-version --installed kernel-huge- -t |grep -e "-${RUNNING_VER}-"`
+GENERIC_PKG=`findpkg --by-version --installed kernel-generic- -t |grep -e "-${RUNNING_VER}-"`
+
+if [ -n "$HUGE_PKG" ]; then
+	boot-select -s old-huge=$HUGE_PKG --no-regen-initrd
+fi
+
+if [ -n "$GENERIC_PKG" ]; then
+	boot-select -s old-generic=$GENERIC_PKG --no-regen-initrd
+fi
+

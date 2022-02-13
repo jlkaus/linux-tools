@@ -1,0 +1,38 @@
+#!/bin/bash
+set -ex
+
+slackpkg -batch=on update
+
+set +e
+slackpkg -batch=on -default_answer=yes upgrade slackpkg
+if [ $? -ne 0 -a $? -ne 20 ]; then
+	exit $?
+fi
+
+set -e
+slackpkg new-config
+slackpkg -batch=on update
+
+set +e
+slackpkg -batch=on -default_answer=yes install-new
+if [ $? -ne 0 -a $? -ne 20 ]; then
+	exit $?
+fi
+slackpkg -batch=on -default_answer=yes upgrade-all
+if [ $? -ne 0 -a $? -ne 20 ]; then
+	exit $?
+fi
+slackpkg -dialog=off clean-system
+if [ $? -ne 0 -a $? -ne 20 ]; then
+	exit $?
+fi
+
+set -e
+slackpkg new-config
+
+install-latest-kernels
+boot-select-update-latest
+remove-unused-kernels
+
+boot-select -a
+
