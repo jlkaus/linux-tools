@@ -1,0 +1,120 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+use Text::ParseWords;
+
+my $tool_name = lc shift || "__elilo__";
+$tool_name =~ s/^([^_].*[^_])/__$1__/;
+
+if ($tool_name eq "__grub__") {
+    # grub
+    my $is_default = "__non_default__";
+    my $initrd = "__none__";
+    my $deflt = undef;
+    my $image_name = "";
+    my $label = "";
+    my $in_menuentry = undef;
+    my $next_menuentry = 0;
+    while(<>) {
+        chomp;
+        # get rid of comment lines
+        # get rid of empty lines
+        s/^[[:space:]]*//g;
+        s/[[:space:]]*$//g;
+
+        if(/^[[:space:]]*#.*$/ || /^[[:space:]]*$/) {
+            # ignore
+        } elsif(/^set default[[:space:]]*=\s*(.*)$/) {
+            $deflt = $1;
+            $deflt =~ s/^["']//g;
+            $deflt =~ s/['"]$//g;
+        } elsif(/^menuentry\s+(.*)\s*{\s*$/) {
+            $in_menuentry = 1;
+            my @parts = shellwords($1);
+            $label = shift @parts;
+            my $id = undef;
+            while(my $x = shift @parts) {
+                if ($x eq "--id" ||
+                    $x eq "\$menuentry_id_option") {
+                    $id = shift @parts;
+                }
+            }
+            if (defined $deflt && ($deflt eq "$next_menuentry" ||
+                                   $deflt eq $id ||
+                                   $deflt eq $label)) {
+                $is_default = "__default__";
+            } else {
+                $is_default = "__non_default__";
+            }
+        } elsif($in_menuentry && /^linux\s+([^ ]+)/) {
+            $image_name = $1;
+        } elsif($in_menuentry && /^initrd\s+([^ ]+)/) {
+            $initrd = $1;
+        } elsif($in_menuentry && /^}$/) {
+            $in_menuentry = undef;
+            ++$next_menuentry;
+            if($image_name ne "") {
+                print("${tool_name} $is_default $image_name $initrd $label\n");
+            }
+            $is_default = "__non_default__";
+            $image_name = "";
+            $initrd = "__none__";
+            $label = "";
+        } else {
+            #ignore
+        }
+    }
+} else {
+    # Assume lilo/elilo
+    my $is_default = "__non_default__";
+    my $initrd = "__none__";
+    my $deflt = "";
+    my $image_name = "";
+    my $label = "";
+
+    while(<>) {
+        chomp;
+        s/^[[:space:]]*//g;
+        s/[[:space:]]*$//g;
+
+        if(/^[[:space:]]*#.*$/ || /^[[:space:]]*$/) {
+            # ignore
+        } elsif(/^(image|label|initrd|default|other)[[:space:]]*=[[:space:]]*(.*)$/) {
+            my $key = $1;
+            my $value = $2;
+#            print("Got $key=$value\n");
+            if($key eq "default") {
+                $deflt = $value;
+            }
+            if(($key eq "image" || $key eq "other") && $image_name ne "") {
+                print("$tool_name $is_default $image_name $initrd $label\n");
+                $image_name = "";
+                $initrd = "__none__";
+                $label = "";
+                $is_default = "__non_default__";
+            }
+            if($key eq "image") {
+                $image_name = $value;
+            }
+            if($key eq "label") {
+                $label = $value;
+                if($label eq $deflt || $deflt eq "") {
+                    $is_default = "__default__";
+                    $deflt=$label;
+                }
+            }
+            if($key eq "initrd") {
+                $initrd = $value;
+            }
+        } else {
+            # ignore
+        }
+    }
+
+    if($image_name ne "") {
+        print("${tool_name} $is_default $image_name $initrd $label\n");
+    }
+}
+
+exit(0);
