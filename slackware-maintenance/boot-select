@@ -194,7 +194,7 @@ BOOT_CONFIGS=$(while read -r tool dflt image initrd label ; do
     initrd_tag=${initrd##*/initrd}
     initrd_tag=${initrd_tag%%.gz}
 
-#    echo $initrd $image_tag $initrd_tag
+#    echo $initrd $image_tag $initrd_tag >&2
     
     if [ -z "$image_tag" ]; then
 	real_tag="__invalid_tag__"
@@ -208,7 +208,7 @@ BOOT_CONFIGS=$(while read -r tool dflt image initrd label ; do
 	real_tag="${image_tag##-}"
     fi
 
-#    echo $real_tag
+#    echo $real_tag >&2
     
     if [ -r "$image" ]; then
 	image_md5=$(md5sum $image 2>/dev/null |awk '{print $1}')
@@ -226,6 +226,7 @@ BOOT_CONFIGS=$(while read -r tool dflt image initrd label ; do
     fi
 
     vers=$(echo "$image_tag" | sed -E -n -e '/[[:digit:].]+/ { s/^[^[:digit:].]*-//; s/-[^[:digit:].]*$//; s/-.*$//; p; q }')
+#    echo [$vers] $image_md5 $initrd_md5 >&2
 
     found_size=
     found_ver=
@@ -249,7 +250,7 @@ BOOT_CONFIGS=$(while read -r tool dflt image initrd label ; do
 	    y_initrd_md5=
 	fi
 	
-#	echo "  CHECK: $y_corename $y_size $y_ver $y_file $y_md5 $y_initrd $y_initrd_md5"
+#	echo "  CHECK: $y_corename $y_size $y_ver $y_file $y_md5 $y_initrd $y_initrd_md5" >&2
 
 	if [ "$initrd_md5" = "__none__" ]; then
 	    found_initrd="__initrd_none__"
@@ -262,7 +263,7 @@ BOOT_CONFIGS=$(while read -r tool dflt image initrd label ; do
 	fi
 
 	if [ "$image_md5" == "$y_md5" ]; then
-	    found_pkg=$(grep -l -s "^${BOOT_LOC##/}/vmlinuz-${y_corename}" ${PKG_LIST_LOC}/kernel-*)
+	    found_pkg=$(grep -l -s "^${BOOT_LOC##/}/vmlinuz-${y_corename}$" ${PKG_LIST_LOC}/kernel-*)
 	    found_pkg=${found_pkg##*/}
 	    found_pkg=${found_pkg:-__notfound__}
 	    found_size=${y_size}
@@ -274,7 +275,7 @@ BOOT_CONFIGS=$(while read -r tool dflt image initrd label ; do
 	fi
     done
 
-#    echo $vers $found_ver >&2
+#    echo [$vers] [$found_ver] $found_pkg >&2
     
     if [ -n "$vers" ]; then
 	real_tag="__invalid_tag__"

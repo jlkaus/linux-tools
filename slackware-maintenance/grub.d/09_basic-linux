@@ -28,5 +28,5 @@ static_entry()
 static_entry "latest generic kernel" latest-generic initrd
 static_entry "latest huge kernel" latest-huge
 static_entry "old generic kernel" old-generic initrd
-static_entry "old huge kernel" old-generic
+static_entry "old huge kernel" old-huge
 
