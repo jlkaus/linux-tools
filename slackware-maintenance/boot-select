@@ -7,6 +7,8 @@ LILO_CONF=/etc/lilo.conf
 ELILO_CONF=$EFI_LOC/elilo.conf
 GRUB_CONF=/boot/grub/grub.cfg
 
+PARSE_BOOT_CONFIG=${PARSE_BOOT_CONFIG:-parse-boot-config}
+
 TMPDIR=
 function cleanup() {
     if [ -n "$TMPDIR" ]; then
@@ -168,7 +170,7 @@ if [ -n "$USE_COLOR" ]; then
     CVERSION_OK=
 fi
 
-CONFIGS=$(./parse-boot-config __lilo__ $LILO_CONF 2> /dev/null; ./parse-boot-config __elilo__ $ELILO_CONF 2> /dev/null; ./parse-boot-config __grub__ $GRUB_CONF 2> /dev/null)
+CONFIGS=$($PARSE_BOOT_CONFIG __lilo__ $LILO_CONF 2> /dev/null; $PARSE_BOOT_CONFIG __elilo__ $ELILO_CONF 2> /dev/null; $PARSE_BOOT_CONFIG __grub__ $GRUB_CONF 2> /dev/null)
 #echo "${CONFIGS}"
 BOOT_CONFIGS=$(while read -r tool dflt image initrd label ; do
 
