@@ -1,0 +1,32 @@
+#!/bin/sh
+
+CLASS="--class gnu-linux --class gnu --class os"
+OS="${GRUB_DISTRIBUTOR} GNU/Linux"
+CLASS="--class $(echo ${GRUB_DISTRIBUTOR} | tr 'A-Z' 'a-z' | cut -d' ' -f1|LC_ALL=C sed 's,[^[:alnum:]_],_,g') ${CLASS}"
+
+static_entry()
+{
+    label="$1"
+    tag=$2
+    initrd=$3
+
+    echo "menuentry '$OS - $label' $CLASS --id 'vmlinuz-$tag' {"
+    echo "    load_video"
+    echo "    insmod gzio"
+    echo "    insmod part_gpt"
+    echo "    insmod ext2"
+    echo "    search --no-floppy --fs-uuid --set=root $GRUB_DEVICE_UUID"
+    echo "    echo   'Loading vmlinuz-$tag ...'"
+    echo "    linux  /boot/vmlinuz-$tag root=UUID=$GRUB_DEVICE_UUID ro"
+    if [ -n "$initrd" ]; then
+        echo "    echo   'Loading initial ramdisk ...'"
+        echo "    initrd /boot/initrd-$tag.gz"
+    fi
+    echo "}"
+}
+
+static_entry "latest generic kernel" latest-generic initrd
+static_entry "latest huge kernel" latest-huge
+static_entry "old generic kernel" old-generic initrd
+static_entry "old huge kernel" old-generic
+
