@@ -5,6 +5,7 @@ BOOT_LOC=/boot
 EFI_LOC=$BOOT_LOC/efi/EFI/Slackware
 LILO_CONF=/etc/lilo.conf
 ELILO_CONF=$EFI_LOC/elilo.conf
+GRUB_CONF=/boot/grub/grub.cfg
 
 TMPDIR=
 function cleanup() {
@@ -44,7 +45,7 @@ set -e
 # --list-all   List all current boot configs, whether we can manipulate them or not.
 # --unused Show the list of kernel packages we aren't currently using in any boot config (or currently running, headers installed, etc)
 # --skip-initrd   Even if currently using an initrd, don't rebuild or replace the initrd image.  Use at your own risk!
-# --no-lilo       If a given tag we're changing is in lilo.conf, lilo is re-run after changes, normally, but this causes it not to be run.
+# --skip-lilo       If a given tag we're changing is in lilo.conf, lilo is re-run after changes, normally, but this causes it not to be run.
 # --set TAG=SIZE-VERSION    For the config of TAG (if configured, or complain), copy in the SIZE-VERSION kernel (if installed, or complain) to the appropriate place, and initrd too, created if needed.
 # --clear TAG               For the config of TAG (if configured, or complain), remove the current kernel.  This will cause that TAG to no longer validly boot.
 # Can specify several --set and/or --clear options in a single invocation.
@@ -215,12 +216,13 @@ function parse_lilo_config {
     fi
 }
 
-CONFIGS=$( parse_lilo_config $LILO_CONF __lilo__; parse_lilo_config $ELILO_CONF __elilo__ )
+#CONFIGS=$( parse_lilo_config $LILO_CONF __lilo__; parse_lilo_config $ELILO_CONF __elilo__ )
+CONFIGS=$(parse-boot-config __lilo__ $LILO_CONF; parse-boot-config __elilo__ $ELILO_CONF; parse-boot-config __grub__ $GRUB_CONF )
 #echo "${CONFIGS}"
 BOOT_CONFIGS=$(while read -r tool dflt image initrd label ; do
 
     if [ "${image:0:1}" != "/" ]; then
-	if [ "$tool" = "__lilo__" ]; then
+	if [ "$tool" = "__lilo__" || "$tool" = "__grub__" ]; then
 	    image="${BOOT_LOC}/${image}"
 	else
 	    image="${EFI_LOC}/${image}"
@@ -228,7 +230,7 @@ BOOT_CONFIGS=$(while read -r tool dflt image initrd label ; do
     fi
 
     if [ "${initrd}" != "__none__" -a "${initrd:0:1}" != "/" ]; then
-	if [ "$tool" = "__lilo__" ]; then
+	if [ "$tool" = "__lilo__" || "$tool" = "__grub__" ]; then
 	    initrd="${BOOT_LOC}/${initrd}"
 	else
 	    initrd="${EFI_LOC}/${initrd}"
@@ -489,7 +491,7 @@ if [ -n "$CHANGES" ]; then
 	tag=${VALS[0]}
 	target=${VALS[1]}
 	if [ -z "${BC_TOOL[$tag]}" ]; then
-	    warn_msg "Tag [$tag] not found as valid tag in lilo.conf or elilo.conf"
+	    warn_msg "Tag [$tag] not found as valid tag in lilo.conf, elilo.conf, or grub.cfg"
 	    CHANGES_VALIDATED=
 	else
             if [ -z "$FORCE_REDO" -a "${BC_PACKAGE[$tag]}" = "$target" ]; then
@@ -505,7 +507,7 @@ if [ -n "$CHANGES" ]; then
                         # just validate that the target tag exists, and its files exist?
                         ptarget=${target:1}
                         if [ -z "${BC_TOOL[$ptarget]}" ]; then
-                            warn_msg "Target tag [$ptarget] not found as a valid tag in lilo.conf or elilo.conf"
+                            warn_msg "Target tag [$ptarget] not found as a valid tag in lilo.conf, elilo.conf, grub.cfg"
                             CHANGES_VALIDATED=
                         else
                             utarget=${BC_PACKAGE[$ptarget]}
@@ -589,7 +591,7 @@ if [ -n "$CHANGES" ]; then
                         # just validate that the target tag exists, and its files exist?
                         ptarget=${target:1}
                         if [ -z "${BC_TOOL[$ptarget]}" ]; then
-                            warn_msg "Target tag [$ptarget] not found as a valid tag in lilo.conf or elilo.conf"
+                            warn_msg "Target tag [$ptarget] not found as a valid tag in lilo.conf, elilo.conf, or grub.cfg"
                             CHANGES_VALIDATED=
                         else
                             utarget=${BC_PACKAGE[$ptarget]}

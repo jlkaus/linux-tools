@@ -1,4 +1,4 @@
-.TH BOOT\-SELECT 8 "2021-08-20" "pkgtools-extras 1.1.0"
+.TH BOOT\-SELECT 8 "2021-08-20" "slackware-maintenace 0.2.0"
 .SH NAME
 boot\-select \- Simplify selection of an appropriate boot kernel for \fBlilo\fR and \fBelilo\fR systems.
 .SH SYNOPSIS
@@ -17,8 +17,9 @@ boot\-select \- Simplify selection of an appropriate boot kernel for \fBlilo\fR 
 .B boot\-select
 analyzes the
 .BR lilo.conf (5)
-and
 .BR elilo.conf
+and
+.BR grub.cfg
 files to determine which kernels are in use to boot the system,
 and enables replacement of the configured kernels with alternate kernel packages to boot from.
 .PP
@@ -129,6 +130,12 @@ for details.
 Default \fBelilo\fR configuration file.
 Used to determine active boot configurations on EFI systems.
 .TP
+.I /boot/grub/grub.cfg
+Default \fBgrub\fR configuration file.
+Used to determine active boot configurations on GRUB systems.
+Often generated automatically, though \fBboot-select\fR assumes it is static, with simple standard labels,
+rather than enumerating every kernel version on the system at the time the config was built.
+.TP
 .I /etc/mkinitrd.conf
 Default
 .BR mkinitrd (8)
@@ -139,11 +146,6 @@ See
 for details.
 .SH BUGS
 There is no locking preventing multiple instances from running at the same time, potentially interferring with each other.
-Does not support
-.B grub
-based systems, though
-.B grub
-has its own helper tools, which should be used instead.
 .SH EXAMPLES
 To list the current boot configurations we can modify with this tool, and the list of installed but unused kernel packages:
 .PP
